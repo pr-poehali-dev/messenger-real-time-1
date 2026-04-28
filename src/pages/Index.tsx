@@ -1,5 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Icon from "@/components/ui/icon";
+import AuthScreen from "@/components/AuthScreen";
+import { getToken, getStoredUser, logout, saveSession, updateProfile } from "@/lib/auth";
 
 type Section = "chats" | "contacts" | "calls" | "profile" | "settings";
 
@@ -127,12 +129,52 @@ function Avatar({ initials, size = "md", online }: { initials: string; size?: "s
   );
 }
 
+interface AppUser {
+  id: number;
+  phone: string;
+  name: string;
+  username: string;
+  bio: string;
+}
+
 export default function Index() {
+  const [currentUser, setCurrentUser] = useState<AppUser | null>(() => getStoredUser());
   const [section, setSection] = useState<Section>("chats");
   const [activeChat, setActiveChat] = useState<Chat | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [newMessage, setNewMessage] = useState("");
   const [chats, setChats] = useState<Chat[]>(INITIAL_CHATS);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileDraft, setProfileDraft] = useState({ name: "", bio: "" });
+  const [profileLoading, setProfileLoading] = useState(false);
+
+  useEffect(() => {
+    const token = getToken();
+    const stored = getStoredUser();
+    if (token && stored) setCurrentUser(stored);
+  }, []);
+
+  const handleAuth = (user: AppUser) => {
+    setCurrentUser(user);
+  };
+
+  const handleLogout = async () => {
+    const token = getToken();
+    if (token) await logout(token);
+    setCurrentUser(null);
+  };
+
+  const handleSaveProfile = async () => {
+    const token = getToken();
+    if (!token || !currentUser) return;
+    setProfileLoading(true);
+    await updateProfile(token, { name: profileDraft.name, bio: profileDraft.bio });
+    const updated = { ...currentUser, name: profileDraft.name, bio: profileDraft.bio };
+    saveSession(token, updated);
+    setCurrentUser(updated);
+    setEditingProfile(false);
+    setProfileLoading(false);
+  };
 
   const navItems: { id: Section; icon: string; label: string }[] = [
     { id: "chats", icon: "MessageCircle", label: "Чаты" },
@@ -171,6 +213,10 @@ export default function Index() {
   };
 
   const totalUnread = chats.reduce((a, c) => a + c.unread, 0);
+
+  if (!currentUser) {
+    return <AuthScreen onAuth={handleAuth} />;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -283,15 +329,15 @@ export default function Index() {
           {/* User footer */}
           <div className="mt-auto p-4 border-t border-white/50">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-400 to-slate-600 flex items-center justify-center text-white text-xs font-semibold shadow">
-                ВЫ
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-semibold shadow">
+                {currentUser.name ? currentUser.name.slice(0, 2).toUpperCase() : "?"}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold text-slate-700 truncate">Вы</div>
+                <div className="text-sm font-semibold text-slate-700 truncate">{currentUser.name || currentUser.phone}</div>
                 <div className="text-xs text-emerald-500 font-medium">В сети</div>
               </div>
-              <button className="silver-btn p-1.5 rounded-lg">
-                <Icon name="MoreHorizontal" size={15} className="text-slate-500" />
+              <button onClick={handleLogout} className="silver-btn p-1.5 rounded-lg" title="Выйти">
+                <Icon name="LogOut" size={15} className="text-slate-400 hover:text-red-400" />
               </button>
             </div>
           </div>
@@ -477,18 +523,52 @@ export default function Index() {
           {section === "profile" && (
             <div className="flex flex-col h-full animate-fade-in overflow-y-auto scrollbar-thin">
               <div className="p-8 flex flex-col items-center border-b border-white/50 text-center shrink-0">
-                <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-slate-400 to-slate-700 flex items-center justify-center text-white text-2xl font-bold shadow-2xl mb-4 ring-4 ring-white/80">
-                  ВЫ
+                <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-blue-400 to-blue-700 flex items-center justify-center text-white text-2xl font-bold shadow-2xl mb-4 ring-4 ring-white/80">
+                  {currentUser.name ? currentUser.name.slice(0, 2).toUpperCase() : "?"}
                 </div>
-                <h2 className="font-montserrat font-semibold text-slate-700 text-2xl">Ваш Профиль</h2>
-                <p className="text-emerald-500 text-sm font-medium mt-1">В сети</p>
-                <p className="text-slate-400 text-sm mt-0.5">+7 900 000-00-00</p>
+                {editingProfile ? (
+                  <div className="w-full flex flex-col items-center gap-3 mt-1">
+                    <input
+                      value={profileDraft.name}
+                      onChange={e => setProfileDraft(d => ({ ...d, name: e.target.value }))}
+                      placeholder="Ваше имя"
+                      className="w-full max-w-xs px-4 py-2.5 rounded-xl bg-white/60 border border-white/80 focus:outline-none focus:ring-2 focus:ring-blue-300/50 text-slate-700 text-center text-lg font-semibold"
+                    />
+                    <textarea
+                      value={profileDraft.bio}
+                      onChange={e => setProfileDraft(d => ({ ...d, bio: e.target.value }))}
+                      placeholder="О себе"
+                      rows={2}
+                      className="w-full max-w-xs px-4 py-2.5 rounded-xl bg-white/60 border border-white/80 focus:outline-none focus:ring-2 focus:ring-blue-300/50 text-slate-500 text-center text-sm resize-none"
+                    />
+                    <div className="flex gap-2">
+                      <button onClick={handleSaveProfile} disabled={profileLoading}
+                        className="px-5 py-2 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 text-white text-sm font-semibold shadow hover:shadow-md transition-all disabled:opacity-60">
+                        {profileLoading ? "Сохраняем..." : "Сохранить"}
+                      </button>
+                      <button onClick={() => setEditingProfile(false)} className="px-5 py-2 rounded-xl silver-btn text-slate-600 text-sm font-medium">
+                        Отмена
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <h2 className="font-montserrat font-semibold text-slate-700 text-2xl">{currentUser.name || "Нет имени"}</h2>
+                    <p className="text-emerald-500 text-sm font-medium mt-1">В сети</p>
+                    <p className="text-slate-400 text-sm mt-0.5">{currentUser.phone}</p>
+                    <button onClick={() => { setEditingProfile(true); setProfileDraft({ name: currentUser.name || "", bio: currentUser.bio || "" }); }}
+                      className="mt-3 px-4 py-1.5 rounded-xl silver-btn text-slate-600 text-sm font-medium flex items-center gap-1.5">
+                      <Icon name="Pencil" size={13} />
+                      Редактировать
+                    </button>
+                  </>
+                )}
               </div>
               <div className="p-5 flex flex-col gap-3">
                 {[
-                  { icon: "AtSign", label: "Имя пользователя", value: "@username" },
-                  { icon: "Info", label: "О себе", value: "Привет, я использую Messenger!" },
-                  { icon: "Phone", label: "Телефон", value: "+7 900 000-00-00" },
+                  { icon: "AtSign", label: "Имя пользователя", value: currentUser.username ? `@${currentUser.username}` : "Не указан" },
+                  { icon: "Info", label: "О себе", value: currentUser.bio || "Привет, я использую Messenger!" },
+                  { icon: "Phone", label: "Телефон", value: currentUser.phone },
                 ].map(item => (
                   <div key={item.label} className="glass rounded-2xl p-4 flex items-center gap-4">
                     <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
@@ -498,9 +578,9 @@ export default function Index() {
                       <div className="text-xs text-slate-400">{item.label}</div>
                       <div className="text-sm font-medium text-slate-700 mt-0.5">{item.value}</div>
                     </div>
-                    <button className="silver-btn p-1.5 rounded-lg shrink-0">
+                    <div className="silver-btn p-1.5 rounded-lg shrink-0 opacity-0">
                       <Icon name="ChevronRight" size={15} className="text-slate-400" />
-                    </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -525,6 +605,7 @@ export default function Index() {
                       {group.items.map((item, j) => (
                         <button
                           key={item.label}
+                          onClick={item.label === "Выйти" ? handleLogout : undefined}
                           className={`w-full flex items-center gap-3.5 px-4 py-3.5 hover:bg-white/60 transition-colors text-left ${j > 0 ? "border-t border-white/50" : ""}`}
                         >
                           <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
