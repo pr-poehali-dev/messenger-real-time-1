@@ -5,6 +5,12 @@
       "method": "OPTIONS",
       "path": "/",
       "expectedStatus": 200
+    },
+    {
+      "name": "Root 404",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 404
     }
   ]
 }

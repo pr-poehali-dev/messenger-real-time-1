@@ -131,9 +131,8 @@ function Avatar({ initials, size = "md", online }: { initials: string; size?: "s
 
 interface AppUser {
   id: number;
-  phone: string;
+  login: string;
   name: string;
-  username: string;
   bio: string;
 }
 
@@ -333,7 +332,7 @@ export default function Index() {
                 {currentUser.name ? currentUser.name.slice(0, 2).toUpperCase() : "?"}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold text-slate-700 truncate">{currentUser.name || currentUser.phone}</div>
+                <div className="text-sm font-semibold text-slate-700 truncate">{currentUser.name || currentUser.login}</div>
                 <div className="text-xs text-emerald-500 font-medium">В сети</div>
               </div>
               <button onClick={handleLogout} className="silver-btn p-1.5 rounded-lg" title="Выйти">
@@ -555,7 +554,7 @@ export default function Index() {
                   <>
                     <h2 className="font-montserrat font-semibold text-slate-700 text-2xl">{currentUser.name || "Нет имени"}</h2>
                     <p className="text-emerald-500 text-sm font-medium mt-1">В сети</p>
-                    <p className="text-slate-400 text-sm mt-0.5">{currentUser.phone}</p>
+                    <p className="text-slate-400 text-sm mt-0.5">@{currentUser.login}</p>
                     <button onClick={() => { setEditingProfile(true); setProfileDraft({ name: currentUser.name || "", bio: currentUser.bio || "" }); }}
                       className="mt-3 px-4 py-1.5 rounded-xl silver-btn text-slate-600 text-sm font-medium flex items-center gap-1.5">
                       <Icon name="Pencil" size={13} />
@@ -566,9 +565,8 @@ export default function Index() {
               </div>
               <div className="p-5 flex flex-col gap-3">
                 {[
-                  { icon: "AtSign", label: "Имя пользователя", value: currentUser.username ? `@${currentUser.username}` : "Не указан" },
-                  { icon: "Info", label: "О себе", value: currentUser.bio || "Привет, я использую Messenger!" },
-                  { icon: "Phone", label: "Телефон", value: currentUser.phone },
+                  { icon: "AtSign", label: "Логин", value: `@${currentUser.login}` },
+                  { icon: "Info", label: "О себе", value: currentUser.bio || "Привет, я использую Prime Chat!" },
                 ].map(item => (
                   <div key={item.label} className="glass rounded-2xl p-4 flex items-center gap-4">
                     <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">

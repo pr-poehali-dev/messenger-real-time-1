@@ -1,21 +1,16 @@
 """
-Авторизация через телефон: отправка OTP и верификация.
-POST /send-otp  — отправить код на телефон
-POST /verify-otp — проверить код и получить токен сессии
-GET  /me        — получить данные текущего пользователя
-POST /update-profile — обновить имя и username
-POST /logout    — выйти из сессии
+Prime Chat — авторизация по логину и паролю.
+POST /register      — создать аккаунт (login, password, name)
+POST /login         — войти (login, password) → токен сессии
+GET  /me            — данные текущего пользователя
+POST /update-profile — обновить имя, bio
+POST /logout        — выйти из сессии
 """
 import json
 import os
-import random
-import string
 import secrets
+import hashlib
 import psycopg2
-
-
-def get_conn():
-    return psycopg2.connect(os.environ["DATABASE_URL"])
 
 
 SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "t_p25066548_messenger_real_time_")
@@ -23,26 +18,39 @@ SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "t_p25066548_messenger_real_time_")
 CORS = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, X-User-Id, X-Auth-Token",
+    "Access-Control-Allow-Headers": "Content-Type, X-Auth-Token",
 }
 
 
+def get_conn():
+    return psycopg2.connect(os.environ["DATABASE_URL"])
+
+
 def resp(status, body):
-    return {"statusCode": status, "headers": {**CORS, "Content-Type": "application/json"}, "body": json.dumps(body, ensure_ascii=False)}
+    return {
+        "statusCode": status,
+        "headers": {**CORS, "Content-Type": "application/json"},
+        "body": json.dumps(body, ensure_ascii=False),
+    }
+
+
+def hash_password(password: str) -> str:
+    return hashlib.sha256(password.encode()).hexdigest()
 
 
 def get_user_from_token(conn, token):
     cur = conn.cursor()
     cur.execute(
-        f"SELECT u.id, u.phone, u.name, u.username, u.bio FROM {SCHEMA}.sessions s "
+        f"SELECT u.id, u.username_login, u.name, u.bio "
+        f"FROM {SCHEMA}.sessions s "
         f"JOIN {SCHEMA}.users u ON u.id = s.user_id "
         f"WHERE s.token = %s AND s.expires_at > NOW()",
-        (token,)
+        (token,),
     )
     row = cur.fetchone()
     if not row:
         return None
-    return {"id": row[0], "phone": row[1], "name": row[2], "username": row[3], "bio": row[4]}
+    return {"id": row[0], "login": row[1], "name": row[2], "bio": row[3]}
 
 
 def handler(event: dict, context) -> dict:
@@ -59,85 +67,81 @@ def handler(event: dict, context) -> dict:
             pass
 
     token = (event.get("headers") or {}).get("X-Auth-Token", "")
-
     conn = get_conn()
     cur = conn.cursor()
 
-    # ── SEND OTP ──
-    if path.endswith("/send-otp") and method == "POST":
-        phone = (body.get("phone") or "").strip()
-        if not phone or len(phone) < 10:
-            return resp(400, {"error": "Укажите номер телефона"})
-
-        # Нормализуем: оставляем только цифры и +
-        phone = "+" + "".join(c for c in phone if c.isdigit())
-
-        code = str(random.randint(100000, 999999))
-
-        cur.execute(
-            f"INSERT INTO {SCHEMA}.otp_codes (phone, code, expires_at) VALUES (%s, %s, NOW() + INTERVAL '5 minutes')",
-            (phone, code)
-        )
-        conn.commit()
-
-        # В реальном проекте здесь отправка SMS через провайдера
-        # Пока возвращаем код в ответе для демо (убрать в продакшне)
-        return resp(200, {"ok": True, "demo_code": code, "message": f"Код отправлен на {phone}"})
-
-    # ── VERIFY OTP ──
-    if path.endswith("/verify-otp") and method == "POST":
-        phone = (body.get("phone") or "").strip()
-        code = (body.get("code") or "").strip()
+    # ── REGISTER ──
+    if path.endswith("/register") and method == "POST":
+        login = (body.get("login") or "").strip().lower()
+        password = (body.get("password") or "").strip()
         name = (body.get("name") or "").strip()
 
-        if not phone or not code:
-            return resp(400, {"error": "Укажите телефон и код"})
-
-        phone = "+" + "".join(c for c in phone if c.isdigit())
+        if not login or len(login) < 3:
+            return resp(400, {"error": "Логин должен быть не короче 3 символов"})
+        if not password or len(password) < 6:
+            return resp(400, {"error": "Пароль должен быть не короче 6 символов"})
+        if not name:
+            return resp(400, {"error": "Укажите ваше имя"})
+        if not login.replace("_", "").replace(".", "").isalnum():
+            return resp(400, {"error": "Логин может содержать только буквы, цифры, _ и ."})
 
         cur.execute(
-            f"SELECT id FROM {SCHEMA}.otp_codes WHERE phone=%s AND code=%s AND expires_at > NOW() AND used=FALSE ORDER BY id DESC LIMIT 1",
-            (phone, code)
+            f"SELECT id FROM {SCHEMA}.users WHERE username_login = %s",
+            (login,),
         )
-        otp_row = cur.fetchone()
-        if not otp_row:
-            return resp(400, {"error": "Неверный или просроченный код"})
+        if cur.fetchone():
+            return resp(409, {"error": "Этот логин уже занят"})
 
-        # Помечаем код как использованный
-        cur.execute(f"UPDATE {SCHEMA}.otp_codes SET used=TRUE WHERE id=%s", (otp_row[0],))
+        pw_hash = hash_password(password)
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.users (username_login, password_hash, name) "
+            f"VALUES (%s, %s, %s) RETURNING id",
+            (login, pw_hash, name),
+        )
+        user_id = cur.fetchone()[0]
 
-        # Получаем или создаём пользователя
-        cur.execute(f"SELECT id, phone, name, username, bio FROM {SCHEMA}.users WHERE phone=%s", (phone,))
-        user_row = cur.fetchone()
-
-        if user_row:
-            user_id = user_row[0]
-            is_new = False
-        else:
-            display_name = name if name else f"Пользователь {phone[-4:]}"
-            cur.execute(
-                f"INSERT INTO {SCHEMA}.users (phone, name) VALUES (%s, %s) RETURNING id",
-                (phone, display_name)
-            )
-            user_id = cur.fetchone()[0]
-            is_new = True
-
-        # Создаём токен сессии
         session_token = secrets.token_hex(32)
         cur.execute(
             f"INSERT INTO {SCHEMA}.sessions (user_id, token) VALUES (%s, %s)",
-            (user_id, session_token)
+            (user_id, session_token),
         )
         conn.commit()
-
-        cur.execute(f"SELECT id, phone, name, username, bio FROM {SCHEMA}.users WHERE id=%s", (user_id,))
-        u = cur.fetchone()
 
         return resp(200, {
             "ok": True,
             "token": session_token,
-            "is_new": is_new,
-            "user": {"id": u[0], "phone": u[1], "name": u[2], "username": u[3], "bio": u[4]}
+            "user": {"id": user_id, "login": login, "name": name, "bio": ""},
+        })
+
+    # ── LOGIN ──
+    if path.endswith("/login") and method == "POST":
+        login = (body.get("login") or "").strip().lower()
+        password = (body.get("password") or "").strip()
+
+        if not login or not password:
+            return resp(400, {"error": "Введите логин и пароль"})
+
+        pw_hash = hash_password(password)
+        cur.execute(
+            f"SELECT id, username_login, name, bio FROM {SCHEMA}.users "
+            f"WHERE username_login = %s AND password_hash = %s",
+            (login, pw_hash),
+        )
+        row = cur.fetchone()
+        if not row:
+            return resp(401, {"error": "Неверный логин или пароль"})
+
+        session_token = secrets.token_hex(32)
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.sessions (user_id, token) VALUES (%s, %s)",
+            (row[0], session_token),
+        )
+        conn.commit()
+
+        return resp(200, {
+            "ok": True,
+            "token": session_token,
+            "user": {"id": row[0], "login": row[1], "name": row[2], "bio": row[3]},
         })
 
     # ── ME ──
@@ -158,12 +162,10 @@ def handler(event: dict, context) -> dict:
             return resp(401, {"error": "Сессия истекла"})
 
         name = body.get("name", user["name"])
-        username = body.get("username", user["username"])
         bio = body.get("bio", user["bio"])
-
         cur.execute(
-            f"UPDATE {SCHEMA}.users SET name=%s, username=%s, bio=%s WHERE id=%s",
-            (name, username, bio, user["id"])
+            f"UPDATE {SCHEMA}.users SET name=%s, bio=%s WHERE id=%s",
+            (name, bio, user["id"]),
         )
         conn.commit()
         return resp(200, {"ok": True})
@@ -171,7 +173,10 @@ def handler(event: dict, context) -> dict:
     # ── LOGOUT ──
     if path.endswith("/logout") and method == "POST":
         if token:
-            cur.execute(f"UPDATE {SCHEMA}.sessions SET expires_at=NOW() WHERE token=%s", (token,))
+            cur.execute(
+                f"UPDATE {SCHEMA}.sessions SET expires_at=NOW() WHERE token=%s",
+                (token,),
+            )
             conn.commit()
         return resp(200, {"ok": True})
 

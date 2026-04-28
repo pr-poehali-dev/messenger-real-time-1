@@ -1,91 +1,64 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
-import { sendOtp, verifyOtp, saveSession } from "@/lib/auth";
+import { register, login, saveSession } from "@/lib/auth";
 
-type Step = "phone" | "code" | "name";
+type Mode = "login" | "register";
+
+interface AppUser {
+  id: number;
+  login: string;
+  name: string;
+  bio: string;
+}
 
 interface Props {
-  onAuth: (user: { id: number; phone: string; name: string; username: string; bio: string }) => void;
+  onAuth: (user: AppUser) => void;
 }
 
 export default function AuthScreen({ onAuth }: Props) {
-  const [step, setStep] = useState<Step>("phone");
-  const [phone, setPhone] = useState("");
-  const [code, setCode] = useState("");
+  const [mode, setMode] = useState<Mode>("login");
+  const [loginVal, setLoginVal] = useState("");
+  const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [demoCode, setDemoCode] = useState("");
+  const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const formatPhone = (v: string) => {
-    const digits = v.replace(/\D/g, "");
-    if (digits.length === 0) return "";
-    let result = "+7";
-    if (digits.length > 1) result += " (" + digits.slice(1, 4);
-    if (digits.length >= 4) result += ") " + digits.slice(4, 7);
-    if (digits.length >= 7) result += "-" + digits.slice(7, 9);
-    if (digits.length >= 9) result += "-" + digits.slice(9, 11);
-    return result;
-  };
-
-  const handlePhoneChange = (v: string) => {
-    const digits = v.replace(/\D/g, "");
-    if (digits.length <= 11) setPhone(formatPhone(v));
-  };
-
-  const rawPhone = () => "+7" + phone.replace(/\D/g, "").slice(1);
-
-  const handleSendCode = async () => {
+  const switchMode = (m: Mode) => {
+    setMode(m);
     setError("");
-    const digits = phone.replace(/\D/g, "");
-    if (digits.length < 11) { setError("Введите полный номер телефона"); return; }
-    setLoading(true);
-    const res = await sendOtp(rawPhone());
-    setLoading(false);
-    if (res.ok) {
-      setDemoCode(res.demo_code || "");
-      setStep("code");
-    } else {
-      setError(res.error || "Ошибка отправки");
+    setLoginVal("");
+    setPassword("");
+    setName("");
+  };
+
+  const handleSubmit = async () => {
+    setError("");
+    if (!loginVal.trim() || !password.trim()) {
+      setError("Заполните все поля");
+      return;
     }
-  };
+    if (mode === "register" && !name.trim()) {
+      setError("Укажите ваше имя");
+      return;
+    }
 
-  const handleVerifyCode = async () => {
-    setError("");
-    if (code.length < 6) { setError("Введите 6-значный код"); return; }
     setLoading(true);
-    const res = await verifyOtp(rawPhone(), code);
+    const res = mode === "register"
+      ? await register(loginVal.trim(), password, name.trim())
+      : await login(loginVal.trim(), password);
     setLoading(false);
+
     if (res.ok) {
       saveSession(res.token, res.user);
-      if (res.is_new) {
-        setStep("name");
-      } else {
-        onAuth(res.user);
-      }
+      onAuth(res.user);
     } else {
-      setError(res.error || "Неверный код");
+      setError(res.error || "Что-то пошло не так");
     }
-  };
-
-  const handleSetName = async () => {
-    setError("");
-    if (!name.trim()) { setError("Введите ваше имя"); return; }
-    setLoading(true);
-    const { updateProfile, getToken, getStoredUser } = await import("@/lib/auth");
-    const token = getToken();
-    const user = getStoredUser();
-    if (token) {
-      await updateProfile(token, { name: name.trim() });
-      saveSession(token, { ...user, name: name.trim() });
-      onAuth({ ...user, name: name.trim() });
-    }
-    setLoading(false);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      {/* Ambient blobs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-blue-200/30 blur-3xl" />
         <div className="absolute top-1/2 -right-24 w-80 h-80 rounded-full bg-violet-200/20 blur-3xl" />
@@ -96,139 +69,124 @@ export default function AuthScreen({ onAuth }: Props) {
         <div className="glass rounded-3xl p-8 shadow-2xl">
 
           {/* Logo */}
-          <div className="flex flex-col items-center mb-8">
+          <div className="flex flex-col items-center mb-7">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-xl mb-4">
               <Icon name="Zap" size={28} className="text-white" />
             </div>
             <h1 className="font-montserrat font-semibold text-slate-700 text-2xl">Prime Chat</h1>
-            <p className="text-slate-400 text-sm mt-1 text-center">
-              {step === "phone" && "Введите номер телефона для входа"}
-              {step === "code" && "Введите код из SMS"}
-              {step === "name" && "Как вас зовут?"}
+            <p className="text-slate-400 text-sm mt-1">
+              {mode === "login" ? "Войдите в свой аккаунт" : "Создайте новый аккаунт"}
             </p>
           </div>
 
-          {/* Step: PHONE */}
-          {step === "phone" && (
-            <div className="flex flex-col gap-4 animate-fade-in">
+          {/* Mode tabs */}
+          <div className="flex rounded-2xl bg-white/50 border border-white/80 p-1 mb-6">
+            <button
+              onClick={() => switchMode("login")}
+              className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                mode === "login" ? "bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-md" : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              Войти
+            </button>
+            <button
+              onClick={() => switchMode("register")}
+              className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                mode === "register" ? "bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-md" : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              Регистрация
+            </button>
+          </div>
+
+          <div className="flex flex-col gap-4 animate-fade-in" key={mode}>
+
+            {/* Name — только при регистрации */}
+            {mode === "register" && (
               <div>
-                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">Номер телефона</label>
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 block">Ваше имя</label>
                 <div className="relative">
-                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
-                    <span className="text-lg">🇷🇺</span>
-                  </div>
+                  <Icon name="User" size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
-                    type="tel"
-                    value={phone}
-                    onChange={e => handlePhoneChange(e.target.value)}
-                    onKeyDown={e => e.key === "Enter" && handleSendCode()}
-                    placeholder="+7 (000) 000-00-00"
-                    className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white/60 border border-white/80 focus:outline-none focus:ring-2 focus:ring-blue-300/50 text-slate-700 placeholder:text-slate-400 text-base transition-all"
+                    type="text"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && handleSubmit()}
+                    placeholder="Имя Фамилия"
+                    className="w-full pl-10 pr-4 py-3 rounded-2xl bg-white/60 border border-white/80 focus:outline-none focus:ring-2 focus:ring-blue-300/50 text-slate-700 placeholder:text-slate-400 text-sm transition-all"
                     autoFocus
                   />
                 </div>
               </div>
-              {error && <p className="text-sm text-red-400 text-center animate-fade-in">{error}</p>}
-              <button
-                onClick={handleSendCode}
-                disabled={loading}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <Icon name="Loader2" size={18} className="animate-spin" />
-                    Отправляем...
-                  </span>
-                ) : (
-                  "Получить код"
-                )}
-              </button>
-              <p className="text-xs text-slate-400 text-center leading-relaxed">
-                Мы отправим SMS с кодом подтверждения
-              </p>
-            </div>
-          )}
+            )}
 
-          {/* Step: CODE */}
-          {step === "code" && (
-            <div className="flex flex-col gap-4 animate-fade-in">
-              <div>
-                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">Код из SMS</label>
+            {/* Login */}
+            <div>
+              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 block">Логин</label>
+              <div className="relative">
+                <Icon name="AtSign" size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
-                  inputMode="numeric"
-                  value={code}
-                  onChange={e => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  onKeyDown={e => e.key === "Enter" && handleVerifyCode()}
-                  placeholder="000000"
-                  className="w-full px-4 py-3.5 rounded-2xl bg-white/60 border border-white/80 focus:outline-none focus:ring-2 focus:ring-blue-300/50 text-slate-700 placeholder:text-slate-400 text-2xl font-mono tracking-widest text-center transition-all"
-                  autoFocus
-                  maxLength={6}
+                  value={loginVal}
+                  onChange={e => setLoginVal(e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, ""))}
+                  onKeyDown={e => e.key === "Enter" && handleSubmit()}
+                  placeholder="your_login"
+                  className="w-full pl-10 pr-4 py-3 rounded-2xl bg-white/60 border border-white/80 focus:outline-none focus:ring-2 focus:ring-blue-300/50 text-slate-700 placeholder:text-slate-400 text-sm transition-all"
+                  autoFocus={mode === "login"}
+                  autoComplete="username"
                 />
               </div>
-              {demoCode && (
-                <div className="glass rounded-xl px-4 py-2.5 flex items-center gap-2 border border-amber-200/60 bg-amber-50/50">
-                  <Icon name="Info" size={15} className="text-amber-500 shrink-0" />
-                  <span className="text-xs text-amber-700">Демо-код: <strong className="font-mono">{demoCode}</strong></span>
-                </div>
+              {mode === "register" && (
+                <p className="text-xs text-slate-400 mt-1 ml-1">Только латинские буквы, цифры, _ и .</p>
               )}
-              {error && <p className="text-sm text-red-400 text-center animate-fade-in">{error}</p>}
-              <button
-                onClick={handleVerifyCode}
-                disabled={loading || code.length < 6}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <Icon name="Loader2" size={18} className="animate-spin" />
-                    Проверяем...
-                  </span>
-                ) : (
-                  "Войти"
-                )}
-              </button>
-              <button onClick={() => { setStep("phone"); setCode(""); setError(""); }} className="text-sm text-slate-400 hover:text-slate-600 transition-colors text-center">
-                Изменить номер
-              </button>
             </div>
-          )}
 
-          {/* Step: NAME */}
-          {step === "name" && (
-            <div className="flex flex-col gap-4 animate-fade-in">
-              <div className="text-center mb-2">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-xl mx-auto mb-3">
-                  <Icon name="UserCheck" size={28} className="text-white" />
-                </div>
-                <p className="text-slate-500 text-sm">Вы новый пользователь! Укажите имя</p>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">Ваше имя</label>
+            {/* Password */}
+            <div>
+              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 block">Пароль</label>
+              <div className="relative">
+                <Icon name="Lock" size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
-                  type="text"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && handleSetName()}
-                  placeholder="Имя Фамилия"
-                  className="w-full px-4 py-3.5 rounded-2xl bg-white/60 border border-white/80 focus:outline-none focus:ring-2 focus:ring-blue-300/50 text-slate-700 placeholder:text-slate-400 text-base transition-all"
-                  autoFocus
+                  type={showPass ? "text" : "password"}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && handleSubmit()}
+                  placeholder={mode === "register" ? "Минимум 6 символов" : "••••••••"}
+                  className="w-full pl-10 pr-10 py-3 rounded-2xl bg-white/60 border border-white/80 focus:outline-none focus:ring-2 focus:ring-blue-300/50 text-slate-700 placeholder:text-slate-400 text-sm transition-all"
+                  autoComplete={mode === "register" ? "new-password" : "current-password"}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPass(v => !v)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  <Icon name={showPass ? "EyeOff" : "Eye"} size={16} />
+                </button>
               </div>
-              {error && <p className="text-sm text-red-400 text-center animate-fade-in">{error}</p>}
-              <button
-                onClick={handleSetName}
-                disabled={loading || !name.trim()}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <Icon name="Loader2" size={18} className="animate-spin" />
-                    Сохраняем...
-                  </span>
-                ) : "Начать общение"}
-              </button>
             </div>
-          )}
+
+            {error && (
+              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-red-50/80 border border-red-100">
+                <Icon name="AlertCircle" size={15} className="text-red-400 shrink-0" />
+                <p className="text-sm text-red-500">{error}</p>
+              </div>
+            )}
+
+            <button
+              onClick={handleSubmit}
+              disabled={loading}
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-60 disabled:cursor-not-allowed mt-1"
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Icon name="Loader2" size={18} className="animate-spin" />
+                  {mode === "login" ? "Входим..." : "Создаём аккаунт..."}
+                </span>
+              ) : (
+                mode === "login" ? "Войти" : "Создать аккаунт"
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>
