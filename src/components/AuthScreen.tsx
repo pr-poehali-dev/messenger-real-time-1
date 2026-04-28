@@ -100,7 +100,7 @@ export default function AuthScreen({ onAuth }: Props) {
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-xl mb-4">
               <Icon name="Zap" size={28} className="text-white" />
             </div>
-            <h1 className="font-montserrat font-semibold text-slate-700 text-2xl">Messenger</h1>
+            <h1 className="font-montserrat font-semibold text-slate-700 text-2xl">Prime Chat</h1>
             <p className="text-slate-400 text-sm mt-1 text-center">
               {step === "phone" && "Введите номер телефона для входа"}
               {step === "code" && "Введите код из SMS"}

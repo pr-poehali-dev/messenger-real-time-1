@@ -238,7 +238,7 @@ export default function Index() {
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg">
                 <Icon name="Zap" size={16} className="text-white" />
               </div>
-              <span className="font-montserrat font-semibold text-slate-700 text-lg tracking-tight">Messenger</span>
+              <span className="font-montserrat font-semibold text-slate-700 text-lg tracking-tight">Prime Chat</span>
             </div>
             <div className="relative">
               <Icon name="Search" size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
