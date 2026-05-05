@@ -218,7 +218,7 @@ export default function Index() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center md:p-4">
       {/* Ambient blobs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-blue-200/30 blur-3xl" />
@@ -226,10 +226,10 @@ export default function Index() {
         <div className="absolute -bottom-20 left-1/3 w-72 h-72 rounded-full bg-sky-200/25 blur-3xl" />
       </div>
 
-      <div className="relative w-full max-w-5xl h-[88vh] flex rounded-3xl overflow-hidden glass shadow-2xl animate-fade-in">
+      <div className="relative w-full max-w-5xl md:h-[88vh] h-screen flex flex-col md:flex-row md:rounded-3xl overflow-hidden glass shadow-2xl animate-fade-in">
 
-        {/* ── SIDEBAR ── */}
-        <div className="w-72 flex flex-col glass-dark border-r border-white/60 shrink-0">
+        {/* ── SIDEBAR (desktop) ── */}
+        <div className="hidden md:flex w-72 flex-col glass-dark border-r border-white/60 shrink-0">
 
           {/* Logo + Search */}
           <div className="p-5 pb-3">
@@ -342,18 +342,44 @@ export default function Index() {
           </div>
         </div>
 
+        {/* ── MOBILE HEADER ── */}
+        <div className="md:hidden flex items-center gap-3 px-4 py-3 glass-dark border-b border-white/60 shrink-0">
+          <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg">
+            <Icon name="Zap" size={14} className="text-white" />
+          </div>
+          <span className="font-montserrat font-semibold text-slate-700 text-base tracking-tight flex-1">Prime Chat</span>
+          <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-semibold shadow">
+            {currentUser.name ? currentUser.name.slice(0, 2).toUpperCase() : "?"}
+          </div>
+        </div>
+
         {/* ── MAIN CONTENT ── */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden min-h-0">
 
           {/* CHATS LIST */}
           {section === "chats" && !activeChat && (
-            <div className="flex flex-col h-full">
-              <div className="p-5 pb-3 border-b border-white/50">
-                <div className="flex items-center justify-between">
+            <div className="flex flex-col h-full overflow-hidden">
+              <div className="p-4 pb-3 border-b border-white/50 shrink-0">
+                <div className="flex items-center justify-between mb-3">
                   <h2 className="font-montserrat font-semibold text-slate-700 text-xl">Сообщения</h2>
                   <button className="silver-btn p-2 rounded-xl">
                     <Icon name="Plus" size={18} className="text-slate-500" />
                   </button>
+                </div>
+                {/* Search — mobile only */}
+                <div className="relative md:hidden">
+                  <Icon name="Search" size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder="Поиск..."
+                    className="w-full pl-9 pr-8 py-2 rounded-xl text-sm bg-white/60 border border-white/80 focus:outline-none focus:ring-2 focus:ring-blue-300/50 text-slate-700 placeholder:text-slate-400 transition-all"
+                  />
+                  {searchQuery && (
+                    <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                      <Icon name="X" size={13} />
+                    </button>
+                  )}
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto scrollbar-thin">
@@ -621,6 +647,32 @@ export default function Index() {
           )}
 
         </div>
+
+        {/* ── MOBILE BOTTOM NAV ── */}
+        <div className="md:hidden shrink-0 px-4 py-3 flex justify-center border-t border-white/40 glass-dark">
+          <div className="flex items-center gap-1 bg-white/70 backdrop-blur-xl border border-white/80 rounded-2xl px-2 py-1.5 shadow-xl">
+            {navItems.map(item => (
+              <button
+                key={item.id}
+                onClick={() => { setSection(item.id); setActiveChat(null); }}
+                className={`relative flex flex-col items-center gap-0.5 px-3.5 py-2 rounded-xl transition-all duration-200 ${
+                  section === item.id
+                    ? "bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-md"
+                    : "text-slate-400 hover:text-slate-600"
+                }`}
+              >
+                <Icon name={item.icon} size={20} />
+                <span className="text-[10px] font-semibold leading-none">{item.label}</span>
+                {item.id === "chats" && totalUnread > 0 && section !== "chats" && (
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
+                    {totalUnread}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
       </div>
     </div>
   );
