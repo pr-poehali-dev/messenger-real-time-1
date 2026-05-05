@@ -60,9 +60,9 @@ export default function AuthScreen({ onAuth }: Props) {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-blue-200/30 blur-3xl" />
-        <div className="absolute top-1/2 -right-24 w-80 h-80 rounded-full bg-violet-200/20 blur-3xl" />
-        <div className="absolute -bottom-20 left-1/3 w-72 h-72 rounded-full bg-sky-200/25 blur-3xl" />
+        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-orange-200/30 blur-3xl" />
+        <div className="absolute top-1/2 -right-24 w-80 h-80 rounded-full bg-amber-100/30 blur-3xl" />
+        <div className="absolute -bottom-20 left-1/3 w-72 h-72 rounded-full bg-orange-100/25 blur-3xl" />
       </div>
 
       <div className="relative w-full max-w-sm animate-slide-up">
@@ -70,10 +70,10 @@ export default function AuthScreen({ onAuth }: Props) {
 
           {/* Logo */}
           <div className="flex flex-col items-center mb-7">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-xl mb-4">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-xl mb-4">
               <Icon name="Zap" size={28} className="text-white" />
             </div>
-            <h1 className="font-montserrat font-semibold text-slate-700 text-2xl">Prime Chat</h1>
+            <h1 className="font-montserrat font-semibold text-slate-700 text-2xl">BobroChat</h1>
             <p className="text-slate-400 text-sm mt-1">
               {mode === "login" ? "Войдите в свой аккаунт" : "Создайте новый аккаунт"}
             </p>
@@ -84,7 +84,7 @@ export default function AuthScreen({ onAuth }: Props) {
             <button
               onClick={() => switchMode("login")}
               className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                mode === "login" ? "bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-md" : "text-slate-500 hover:text-slate-700"
+                mode === "login" ? "bg-gradient-to-br from-orange-400 to-orange-600 text-white shadow-md" : "text-slate-500 hover:text-slate-700"
               }`}
             >
               Войти
@@ -92,7 +92,7 @@ export default function AuthScreen({ onAuth }: Props) {
             <button
               onClick={() => switchMode("register")}
               className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                mode === "register" ? "bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-md" : "text-slate-500 hover:text-slate-700"
+                mode === "register" ? "bg-gradient-to-br from-orange-400 to-orange-600 text-white shadow-md" : "text-slate-500 hover:text-slate-700"
               }`}
             >
               Регистрация
@@ -113,7 +113,7 @@ export default function AuthScreen({ onAuth }: Props) {
                     onChange={e => setName(e.target.value)}
                     onKeyDown={e => e.key === "Enter" && handleSubmit()}
                     placeholder="Имя Фамилия"
-                    className="w-full pl-10 pr-4 py-3 rounded-2xl bg-white/60 border border-white/80 focus:outline-none focus:ring-2 focus:ring-blue-300/50 text-slate-700 placeholder:text-slate-400 text-sm transition-all"
+                    className="w-full pl-10 pr-4 py-3 rounded-2xl bg-white/60 border border-white/80 focus:outline-none focus:ring-2 focus:ring-orange-300/50 text-slate-700 placeholder:text-slate-400 text-sm transition-all"
                     autoFocus
                   />
                 </div>
@@ -131,7 +131,7 @@ export default function AuthScreen({ onAuth }: Props) {
                   onChange={e => setLoginVal(e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, ""))}
                   onKeyDown={e => e.key === "Enter" && handleSubmit()}
                   placeholder="your_login"
-                  className="w-full pl-10 pr-4 py-3 rounded-2xl bg-white/60 border border-white/80 focus:outline-none focus:ring-2 focus:ring-blue-300/50 text-slate-700 placeholder:text-slate-400 text-sm transition-all"
+                  className="w-full pl-10 pr-4 py-3 rounded-2xl bg-white/60 border border-white/80 focus:outline-none focus:ring-2 focus:ring-orange-300/50 text-slate-700 placeholder:text-slate-400 text-sm transition-all"
                   autoFocus={mode === "login"}
                   autoComplete="username"
                 />
@@ -152,7 +152,7 @@ export default function AuthScreen({ onAuth }: Props) {
                   onChange={e => setPassword(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && handleSubmit()}
                   placeholder={mode === "register" ? "Минимум 6 символов" : "••••••••"}
-                  className="w-full pl-10 pr-10 py-3 rounded-2xl bg-white/60 border border-white/80 focus:outline-none focus:ring-2 focus:ring-blue-300/50 text-slate-700 placeholder:text-slate-400 text-sm transition-all"
+                  className="w-full pl-10 pr-10 py-3 rounded-2xl bg-white/60 border border-white/80 focus:outline-none focus:ring-2 focus:ring-orange-300/50 text-slate-700 placeholder:text-slate-400 text-sm transition-all"
                   autoComplete={mode === "register" ? "new-password" : "current-password"}
                 />
                 <button
@@ -175,7 +175,7 @@ export default function AuthScreen({ onAuth }: Props) {
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-60 disabled:cursor-not-allowed mt-1"
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 text-white font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-60 disabled:cursor-not-allowed mt-1"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">

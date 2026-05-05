@@ -104,7 +104,7 @@ const CALLS: Call[] = [
 ];
 
 const avatarColors: Record<string, string> = {
-  "АС": "from-blue-400 to-blue-600",
+  "АС": "from-orange-400 to-orange-600",
   "МИ": "from-violet-400 to-violet-600",
   "ПX": "from-emerald-400 to-emerald-600",
   "ДК": "from-amber-400 to-amber-600",
@@ -221,9 +221,9 @@ export default function Index() {
     <div className="min-h-screen flex items-center justify-center md:p-4">
       {/* Ambient blobs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-blue-200/30 blur-3xl" />
-        <div className="absolute top-1/2 -right-24 w-80 h-80 rounded-full bg-violet-200/20 blur-3xl" />
-        <div className="absolute -bottom-20 left-1/3 w-72 h-72 rounded-full bg-sky-200/25 blur-3xl" />
+        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-orange-200/30 blur-3xl" />
+        <div className="absolute top-1/2 -right-24 w-80 h-80 rounded-full bg-orange-100/30 blur-3xl" />
+        <div className="absolute -bottom-20 left-1/3 w-72 h-72 rounded-full bg-amber-200/25 blur-3xl" />
       </div>
 
       <div className="relative w-full max-w-5xl md:h-[88vh] h-screen flex flex-col md:flex-row md:rounded-3xl overflow-hidden glass shadow-2xl animate-fade-in">
@@ -234,10 +234,10 @@ export default function Index() {
           {/* Logo + Search */}
           <div className="p-5 pb-3">
             <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-lg">
                 <Icon name="Zap" size={16} className="text-white" />
               </div>
-              <span className="font-montserrat font-semibold text-slate-700 text-lg tracking-tight">Prime Chat</span>
+              <span className="font-montserrat font-semibold text-slate-700 text-lg tracking-tight">BobroChat</span>
             </div>
             <div className="relative">
               <Icon name="Search" size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -245,7 +245,7 @@ export default function Index() {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Поиск по всему..."
-                className="w-full pl-9 pr-8 py-2.5 rounded-xl text-sm bg-white/60 border border-white/80 focus:outline-none focus:ring-2 focus:ring-blue-300/50 text-slate-700 placeholder:text-slate-400 transition-all"
+                className="w-full pl-9 pr-8 py-2.5 rounded-xl text-sm bg-white/60 border border-white/80 focus:outline-none focus:ring-2 focus:ring-orange-300/50 text-slate-700 placeholder:text-slate-400 transition-all"
               />
               {searchQuery && (
                 <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
@@ -266,7 +266,7 @@ export default function Index() {
                   <div className="px-3 pt-2.5 pb-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">Чаты</div>
                   {searchResults.chats.map(c => (
                     <button key={c.id} onClick={() => { setActiveChat(c); setSection("chats"); setSearchQuery(""); }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-blue-50 transition-colors text-left">
+                      className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-orange-50 transition-colors text-left">
                       <Avatar initials={c.avatar} size="sm" />
                       <span className="text-sm text-slate-700">{c.name}</span>
                     </button>
@@ -278,7 +278,7 @@ export default function Index() {
                   <div className="px-3 pt-2.5 pb-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">Сообщения</div>
                   {searchResults.messages.slice(0, 3).map(m => (
                     <button key={m.id} onClick={() => { const c = chats.find(ch => ch.id === m.chatId); if (c) { setActiveChat(c); setSection("chats"); setSearchQuery(""); } }}
-                      className="w-full flex flex-col px-3 py-2 hover:bg-blue-50 transition-colors text-left">
+                      className="w-full flex flex-col px-3 py-2 hover:bg-orange-50 transition-colors text-left">
                       <span className="text-xs text-slate-400">{m.name}</span>
                       <span className="text-sm text-slate-700 truncate">{m.text}</span>
                     </button>
@@ -290,7 +290,7 @@ export default function Index() {
                   <div className="px-3 pt-2.5 pb-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">Контакты</div>
                   {searchResults.contacts.map(c => (
                     <button key={c.id} onClick={() => { setSection("contacts"); setSearchQuery(""); }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-blue-50 transition-colors text-left">
+                      className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-orange-50 transition-colors text-left">
                       <Avatar initials={c.avatar} size="sm" />
                       <span className="text-sm text-slate-700">{c.name}</span>
                     </button>
@@ -316,7 +316,7 @@ export default function Index() {
                 <span>{item.label}</span>
                 {item.id === "chats" && totalUnread > 0 && (
                   <span className={`ml-auto text-xs font-bold px-2 py-0.5 rounded-full ${
-                    section === "chats" ? "bg-white/25 text-white" : "bg-blue-500 text-white"
+                    section === "chats" ? "bg-white/25 text-white" : "bg-orange-500 text-white"
                   }`}>
                     {totalUnread}
                   </span>
@@ -328,7 +328,7 @@ export default function Index() {
           {/* User footer */}
           <div className="mt-auto p-4 border-t border-white/50">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-semibold shadow">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-xs font-semibold shadow">
                 {currentUser.name ? currentUser.name.slice(0, 2).toUpperCase() : "?"}
               </div>
               <div className="flex-1 min-w-0">
@@ -344,11 +344,11 @@ export default function Index() {
 
         {/* ── MOBILE HEADER ── */}
         <div className="md:hidden flex items-center gap-3 px-4 py-3 glass-dark border-b border-white/60 shrink-0">
-          <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg">
+          <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-lg">
             <Icon name="Zap" size={14} className="text-white" />
           </div>
-          <span className="font-montserrat font-semibold text-slate-700 text-base tracking-tight flex-1">Prime Chat</span>
-          <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-semibold shadow">
+          <span className="font-montserrat font-semibold text-slate-700 text-base tracking-tight flex-1">BobroChat</span>
+          <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-xs font-semibold shadow">
             {currentUser.name ? currentUser.name.slice(0, 2).toUpperCase() : "?"}
           </div>
         </div>
@@ -373,7 +373,7 @@ export default function Index() {
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                     placeholder="Поиск..."
-                    className="w-full pl-9 pr-8 py-2 rounded-xl text-sm bg-white/60 border border-white/80 focus:outline-none focus:ring-2 focus:ring-blue-300/50 text-slate-700 placeholder:text-slate-400 transition-all"
+                    className="w-full pl-9 pr-8 py-2 rounded-xl text-sm bg-white/60 border border-white/80 focus:outline-none focus:ring-2 focus:ring-orange-300/50 text-slate-700 placeholder:text-slate-400 transition-all"
                   />
                   {searchQuery && (
                     <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
@@ -399,7 +399,7 @@ export default function Index() {
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-slate-400 truncate">{chat.lastMessage}</span>
                         {chat.unread > 0 && (
-                          <span className="ml-2 shrink-0 text-xs font-bold bg-blue-500 text-white w-5 h-5 rounded-full flex items-center justify-center">
+                          <span className="ml-2 shrink-0 text-xs font-bold bg-orange-500 text-white w-5 h-5 rounded-full flex items-center justify-center">
                             {chat.unread}
                           </span>
                         )}
@@ -437,7 +437,7 @@ export default function Index() {
                   <div key={msg.id} className={`flex ${msg.out ? "justify-end" : "justify-start"} animate-slide-up`} style={{ animationDelay: `${i * 30}ms` }}>
                     <div className={`max-w-xs lg:max-w-sm px-4 py-2.5 shadow-sm ${msg.out ? "message-out" : "message-in text-slate-700"}`}>
                       <p className="text-sm leading-relaxed">{msg.text}</p>
-                      <p className={`text-xs mt-1 text-right ${msg.out ? "text-blue-200" : "text-slate-400"}`}>{msg.time}</p>
+                      <p className={`text-xs mt-1 text-right ${msg.out ? "text-orange-100" : "text-slate-400"}`}>{msg.time}</p>
                     </div>
                   </div>
                 ))}
@@ -460,7 +460,7 @@ export default function Index() {
                   </button>
                   <button
                     onClick={sendMessage}
-                    className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all shrink-0"
+                    className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all shrink-0"
                   >
                     <Icon name="Send" size={14} className="text-white" />
                   </button>
@@ -492,7 +492,7 @@ export default function Index() {
                     </div>
                     <div className="flex gap-2">
                       <button className="silver-btn p-2 rounded-xl">
-                        <Icon name="MessageCircle" size={15} className="text-blue-500" />
+                        <Icon name="MessageCircle" size={15} className="text-orange-500" />
                       </button>
                       <button className="silver-btn p-2 rounded-xl">
                         <Icon name="Phone" size={15} className="text-slate-500" />
@@ -525,7 +525,7 @@ export default function Index() {
                         <Icon
                           name={call.type === "incoming" ? "PhoneIncoming" : call.type === "outgoing" ? "PhoneOutgoing" : "PhoneMissed"}
                           size={13}
-                          className={call.type === "missed" ? "text-red-400" : call.type === "incoming" ? "text-emerald-500" : "text-blue-500"}
+                          className={call.type === "missed" ? "text-red-400" : call.type === "incoming" ? "text-emerald-500" : "text-orange-500"}
                         />
                         <span className={`text-xs ${call.type === "missed" ? "text-red-400" : "text-slate-400"}`}>
                           {call.type === "incoming" ? "Входящий" : call.type === "outgoing" ? "Исходящий" : "Пропущенный"}
@@ -536,7 +536,7 @@ export default function Index() {
                       <div className="text-xs text-slate-300 mt-0.5">{call.date}</div>
                     </div>
                     <button className="silver-btn p-2.5 rounded-xl">
-                      <Icon name="Phone" size={16} className="text-blue-500" />
+                      <Icon name="Phone" size={16} className="text-orange-500" />
                     </button>
                   </div>
                 ))}
@@ -548,7 +548,7 @@ export default function Index() {
           {section === "profile" && (
             <div className="flex flex-col h-full animate-fade-in overflow-y-auto scrollbar-thin">
               <div className="p-8 flex flex-col items-center border-b border-white/50 text-center shrink-0">
-                <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-blue-400 to-blue-700 flex items-center justify-center text-white text-2xl font-bold shadow-2xl mb-4 ring-4 ring-white/80">
+                <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-2xl font-bold shadow-2xl mb-4 ring-4 ring-white/80">
                   {currentUser.name ? currentUser.name.slice(0, 2).toUpperCase() : "?"}
                 </div>
                 {editingProfile ? (
@@ -557,18 +557,18 @@ export default function Index() {
                       value={profileDraft.name}
                       onChange={e => setProfileDraft(d => ({ ...d, name: e.target.value }))}
                       placeholder="Ваше имя"
-                      className="w-full max-w-xs px-4 py-2.5 rounded-xl bg-white/60 border border-white/80 focus:outline-none focus:ring-2 focus:ring-blue-300/50 text-slate-700 text-center text-lg font-semibold"
+                      className="w-full max-w-xs px-4 py-2.5 rounded-xl bg-white/60 border border-white/80 focus:outline-none focus:ring-2 focus:ring-orange-300/50 text-slate-700 text-center text-lg font-semibold"
                     />
                     <textarea
                       value={profileDraft.bio}
                       onChange={e => setProfileDraft(d => ({ ...d, bio: e.target.value }))}
                       placeholder="О себе"
                       rows={2}
-                      className="w-full max-w-xs px-4 py-2.5 rounded-xl bg-white/60 border border-white/80 focus:outline-none focus:ring-2 focus:ring-blue-300/50 text-slate-500 text-center text-sm resize-none"
+                      className="w-full max-w-xs px-4 py-2.5 rounded-xl bg-white/60 border border-white/80 focus:outline-none focus:ring-2 focus:ring-orange-300/50 text-slate-500 text-center text-sm resize-none"
                     />
                     <div className="flex gap-2">
                       <button onClick={handleSaveProfile} disabled={profileLoading}
-                        className="px-5 py-2 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 text-white text-sm font-semibold shadow hover:shadow-md transition-all disabled:opacity-60">
+                        className="px-5 py-2 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 text-white text-sm font-semibold shadow hover:shadow-md transition-all disabled:opacity-60">
                         {profileLoading ? "Сохраняем..." : "Сохранить"}
                       </button>
                       <button onClick={() => setEditingProfile(false)} className="px-5 py-2 rounded-xl silver-btn text-slate-600 text-sm font-medium">
@@ -592,11 +592,11 @@ export default function Index() {
               <div className="p-5 flex flex-col gap-3">
                 {[
                   { icon: "AtSign", label: "Логин", value: `@${currentUser.login}` },
-                  { icon: "Info", label: "О себе", value: currentUser.bio || "Привет, я использую Prime Chat!" },
+                  { icon: "Info", label: "О себе", value: currentUser.bio || "Привет, я использую BobroChat!" },
                 ].map(item => (
                   <div key={item.label} className="glass rounded-2xl p-4 flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-                      <Icon name={item.icon} size={18} className="text-blue-500" />
+                    <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center shrink-0">
+                      <Icon name={item.icon} size={18} className="text-orange-500" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-xs text-slate-400">{item.label}</div>
@@ -632,8 +632,8 @@ export default function Index() {
                           onClick={item.label === "Выйти" ? handleLogout : undefined}
                           className={`w-full flex items-center gap-3.5 px-4 py-3.5 hover:bg-white/60 transition-colors text-left ${j > 0 ? "border-t border-white/50" : ""}`}
                         >
-                          <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-                            <Icon name={item.icon} size={16} className={item.label === "Выйти" ? "text-red-400" : "text-blue-500"} />
+                          <div className="w-8 h-8 rounded-xl bg-orange-50 flex items-center justify-center shrink-0">
+                            <Icon name={item.icon} size={16} className={item.label === "Выйти" ? "text-red-400" : "text-orange-500"} />
                           </div>
                           <span className={`text-sm font-medium flex-1 text-left ${item.label === "Выйти" ? "text-red-400" : "text-slate-700"}`}>{item.label}</span>
                           <Icon name="ChevronRight" size={15} className="text-slate-300" />
@@ -657,7 +657,7 @@ export default function Index() {
                 onClick={() => { setSection(item.id); setActiveChat(null); }}
                 className={`relative flex flex-col items-center gap-0.5 px-3.5 py-2 rounded-xl transition-all duration-200 ${
                   section === item.id
-                    ? "bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-md"
+                    ? "bg-gradient-to-br from-orange-400 to-orange-600 text-white shadow-md"
                     : "text-slate-400 hover:text-slate-600"
                 }`}
               >
