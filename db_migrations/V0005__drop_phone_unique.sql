@@ -1,0 +1,2 @@
+ALTER TABLE t_p25066548_messenger_real_time_.users DROP CONSTRAINT IF EXISTS users_phone_key;
+DROP INDEX IF EXISTS t_p25066548_messenger_real_time_.users_phone_key;
