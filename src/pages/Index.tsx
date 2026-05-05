@@ -41,67 +41,11 @@ interface Call {
   date: string;
 }
 
-const INITIAL_CHATS: Chat[] = [
-  {
-    id: 1, name: "Алексей Смирнов", avatar: "АС", lastMessage: "Окей, до встречи!", time: "14:32", unread: 2, online: true,
-    messages: [
-      { id: 1, text: "Привет! Как дела?", time: "14:20", out: false },
-      { id: 2, text: "Отлично, спасибо! Встреча в 16:00?", time: "14:25", out: true },
-      { id: 3, text: "Да, всё верно. Жди меня у входа", time: "14:28", out: false },
-      { id: 4, text: "Окей, до встречи!", time: "14:32", out: false },
-    ]
-  },
-  {
-    id: 2, name: "Мария Иванова", avatar: "МИ", lastMessage: "Отправила документы на почту", time: "13:15", unread: 0, online: true,
-    messages: [
-      { id: 1, text: "Добрый день! Документы готовы?", time: "12:50", out: true },
-      { id: 2, text: "Да, минуту подождите", time: "13:10", out: false },
-      { id: 3, text: "Отправила документы на почту", time: "13:15", out: false },
-    ]
-  },
-  {
-    id: 3, name: "Команда Проект X", avatar: "ПX", lastMessage: "Дедлайн перенесли на пятницу", time: "вчера", unread: 5, online: false,
-    messages: [
-      { id: 1, text: "Всем привет! Обновление по проекту", time: "09:00", out: false },
-      { id: 2, text: "Дедлайн перенесли на пятницу", time: "09:05", out: false },
-      { id: 3, text: "Понял, спасибо за инфо", time: "09:30", out: true },
-    ]
-  },
-  {
-    id: 4, name: "Дмитрий Козлов", avatar: "ДК", lastMessage: "Позвони когда будешь свободен", time: "вчера", unread: 1, online: false,
-    messages: [
-      { id: 1, text: "Привет, есть разговор", time: "18:00", out: false },
-      { id: 2, text: "Позвони когда будешь свободен", time: "18:02", out: false },
-    ]
-  },
-  {
-    id: 5, name: "Елена Петрова", avatar: "ЕП", lastMessage: "Спасибо за помощь!", time: "пн", unread: 0, online: true,
-    messages: [
-      { id: 1, text: "Можешь помочь с презентацией?", time: "10:00", out: false },
-      { id: 2, text: "Конечно, пришли материалы", time: "10:15", out: true },
-      { id: 3, text: "Спасибо за помощь!", time: "11:30", out: false },
-    ]
-  },
-];
+const INITIAL_CHATS: Chat[] = [];
 
-const CONTACTS: Contact[] = [
-  { id: 1, name: "Алексей Смирнов", avatar: "АС", phone: "+7 900 123-45-67", online: true, status: "На работе" },
-  { id: 2, name: "Дмитрий Козлов", avatar: "ДК", phone: "+7 911 234-56-78", online: false, status: "Недоступен" },
-  { id: 3, name: "Елена Петрова", avatar: "ЕП", phone: "+7 922 345-67-89", online: true, status: "В сети" },
-  { id: 4, name: "Мария Иванова", avatar: "МИ", phone: "+7 933 456-78-90", online: true, status: "Печатает..." },
-  { id: 5, name: "Николай Фёдоров", avatar: "НФ", phone: "+7 944 567-89-01", online: false, status: "Был час назад" },
-  { id: 6, name: "Ольга Сидорова", avatar: "ОС", phone: "+7 955 678-90-12", online: false, status: "Не беспокоить" },
-  { id: 7, name: "Павел Громов", avatar: "ПГ", phone: "+7 966 789-01-23", online: true, status: "В сети" },
-];
+const CONTACTS: Contact[] = [];
 
-const CALLS: Call[] = [
-  { id: 1, name: "Алексей Смирнов", avatar: "АС", type: "incoming", duration: "5:32", date: "Сегодня, 12:14" },
-  { id: 2, name: "Мария Иванова", avatar: "МИ", type: "outgoing", duration: "2:10", date: "Сегодня, 10:05" },
-  { id: 3, name: "Дмитрий Козлов", avatar: "ДК", type: "missed", duration: "—", date: "Вчера, 19:45" },
-  { id: 4, name: "Елена Петрова", avatar: "ЕП", type: "incoming", duration: "12:07", date: "Вчера, 15:22" },
-  { id: 5, name: "Николай Фёдоров", avatar: "НФ", type: "outgoing", duration: "0:48", date: "Пн, 09:30" },
-  { id: 6, name: "Ольга Сидорова", avatar: "ОС", type: "missed", duration: "—", date: "Вс, 21:00" },
-];
+const CALLS: Call[] = [];
 
 const avatarColors: Record<string, string> = {
   "АС": "from-orange-400 to-orange-600",
@@ -383,6 +327,15 @@ export default function Index() {
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto scrollbar-thin">
+                {chats.length === 0 && (
+                  <div className="flex flex-col items-center justify-center h-full gap-3 text-center p-8">
+                    <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center">
+                      <Icon name="MessageCircle" size={28} className="text-orange-300" />
+                    </div>
+                    <p className="font-montserrat font-semibold text-slate-600">Нет чатов</p>
+                    <p className="text-sm text-slate-400">Начни новый разговор, нажав кнопку +</p>
+                  </div>
+                )}
                 {chats.map((chat, i) => (
                   <button
                     key={chat.id}
@@ -482,6 +435,15 @@ export default function Index() {
                 <p className="text-xs text-slate-400 mt-1">{CONTACTS.filter(c => c.online).length} онлайн · {CONTACTS.length} всего</p>
               </div>
               <div className="flex-1 overflow-y-auto scrollbar-thin p-4 flex flex-col gap-2">
+                {CONTACTS.length === 0 && (
+                  <div className="flex flex-col items-center justify-center h-full gap-3 text-center p-8">
+                    <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center">
+                      <Icon name="Users" size={28} className="text-orange-300" />
+                    </div>
+                    <p className="font-montserrat font-semibold text-slate-600">Нет контактов</p>
+                    <p className="text-sm text-slate-400">Добавь первый контакт, нажав кнопку выше</p>
+                  </div>
+                )}
                 {CONTACTS.map((contact, i) => (
                   <div key={contact.id} className="glass rounded-2xl p-4 flex items-center gap-4 hover:shadow-md transition-all animate-slide-up" style={{ animationDelay: `${i * 40}ms` }}>
                     <Avatar initials={contact.avatar} online={contact.online} />
@@ -516,6 +478,15 @@ export default function Index() {
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto scrollbar-thin p-4 flex flex-col gap-2">
+                {CALLS.length === 0 && (
+                  <div className="flex flex-col items-center justify-center h-full gap-3 text-center p-8">
+                    <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center">
+                      <Icon name="Phone" size={28} className="text-orange-300" />
+                    </div>
+                    <p className="font-montserrat font-semibold text-slate-600">Нет звонков</p>
+                    <p className="text-sm text-slate-400">История звонков появится здесь</p>
+                  </div>
+                )}
                 {CALLS.map((call, i) => (
                   <div key={call.id} className="glass rounded-2xl p-4 flex items-center gap-4 hover:shadow-md transition-all animate-slide-up" style={{ animationDelay: `${i * 40}ms` }}>
                     <Avatar initials={call.avatar} />
