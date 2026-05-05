@@ -57,7 +57,6 @@ def handler(event: dict, context) -> dict:
     if event.get("httpMethod") == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
 
-    path = event.get("path", "/").rstrip("/")
     method = event.get("httpMethod", "GET")
     body = {}
     if event.get("body"):
@@ -66,12 +65,13 @@ def handler(event: dict, context) -> dict:
         except Exception:
             pass
 
+    action = body.get("action", "")
     token = (event.get("headers") or {}).get("X-Auth-Token", "")
     conn = get_conn()
     cur = conn.cursor()
 
     # ── REGISTER ──
-    if path.endswith("/register") and method == "POST":
+    if action == "register" and method == "POST":
         login = (body.get("login") or "").strip().lower()
         password = (body.get("password") or "").strip()
         name = (body.get("name") or "").strip()
@@ -114,7 +114,7 @@ def handler(event: dict, context) -> dict:
         })
 
     # ── LOGIN ──
-    if path.endswith("/login") and method == "POST":
+    if action == "login" and method == "POST":
         login = (body.get("login") or "").strip().lower()
         password = (body.get("password") or "").strip()
 
@@ -145,7 +145,7 @@ def handler(event: dict, context) -> dict:
         })
 
     # ── ME ──
-    if path.endswith("/me") and method == "GET":
+    if action == "me":
         if not token:
             return resp(401, {"error": "Не авторизован"})
         user = get_user_from_token(conn, token)
@@ -154,7 +154,7 @@ def handler(event: dict, context) -> dict:
         return resp(200, {"user": user})
 
     # ── UPDATE PROFILE ──
-    if path.endswith("/update-profile") and method == "POST":
+    if action == "update-profile" and method == "POST":
         if not token:
             return resp(401, {"error": "Не авторизован"})
         user = get_user_from_token(conn, token)
@@ -171,7 +171,7 @@ def handler(event: dict, context) -> dict:
         return resp(200, {"ok": True})
 
     # ── LOGOUT ──
-    if path.endswith("/logout") and method == "POST":
+    if action == "logout" and method == "POST":
         if token:
             cur.execute(
                 f"UPDATE {SCHEMA}.sessions SET expires_at=NOW() WHERE token=%s",

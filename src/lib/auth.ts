@@ -23,44 +23,34 @@ export function clearSession() {
   localStorage.removeItem(USER_KEY);
 }
 
-export async function register(login: string, password: string, name: string) {
-  const res = await fetch(`${AUTH_URL}/register`, {
+async function authPost(action: string, data: object = {}, token?: string) {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) headers["X-Auth-Token"] = token;
+  const res = await fetch(AUTH_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ login, password, name }),
+    headers,
+    body: JSON.stringify({ action, ...data }),
   });
   return res.json();
+}
+
+export async function register(login: string, password: string, name: string) {
+  return authPost("register", { login, password, name });
 }
 
 export async function login(loginStr: string, password: string) {
-  const res = await fetch(`${AUTH_URL}/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ login: loginStr, password }),
-  });
-  return res.json();
+  return authPost("login", { login: loginStr, password });
 }
 
 export async function fetchMe(token: string) {
-  const res = await fetch(`${AUTH_URL}/me`, {
-    headers: { "X-Auth-Token": token },
-  });
-  return res.json();
+  return authPost("me", {}, token);
 }
 
 export async function updateProfile(token: string, data: { name?: string; bio?: string }) {
-  const res = await fetch(`${AUTH_URL}/update-profile`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Auth-Token": token },
-    body: JSON.stringify(data),
-  });
-  return res.json();
+  return authPost("update-profile", data, token);
 }
 
 export async function logout(token: string) {
-  await fetch(`${AUTH_URL}/logout`, {
-    method: "POST",
-    headers: { "X-Auth-Token": token },
-  });
+  await authPost("logout", {}, token);
   clearSession();
 }
